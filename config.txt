@@ -1,0 +1,334 @@
+version 14.1R4.8;
+system {
+    host-name parry-this;
+    root-authentication {
+        encrypted-password "$1$4sm1EitJ$CVItXSojSXrO3MevWgvan."; ## SECRET-DATA
+    }
+    login {
+        user admin {
+            uid 2001;
+            class super-user;
+            authentication {
+                encrypted-password "$1$KadO57cb$wknzuLvOk0oCKAgDry2w2."; ## SECRET-DATA
+            }
+        }
+        user noc-admin {
+            uid 2000;
+            class super-user;
+            authentication {
+                encrypted-password "$1$71W7mnbN$X0s0S6vYenrV9O4tWiAvC."; ## SECRET-DATA
+            }
+        }
+    }
+    services {
+        ssh {
+            connection-limit 5;
+        }
+        telnet {
+            connection-limit 5;
+        }
+    }
+    syslog {
+        user * {
+            any emergency;
+        }
+        file messages {
+            any notice;
+            authorization info;
+        }
+        file interactive-commands {
+            interactive-commands any;
+        }
+    }
+}
+interfaces {
+    ge-0/0/0 {
+        unit 0 {
+            description Management;
+            family inet {
+                address 10.253.253.19/16;
+            }
+        }
+    }
+    ge-0/0/1 {
+        mac 00:05:86:71:51:01;
+        unit 0 {
+            description Upstream;
+			filter {
+				input INCOMING;
+			}
+            family inet {
+                address 57.57.57.2/30;
+            }
+        }
+    }
+    ge-0/0/2 {
+        mac 00:05:86:71:51:02;
+        unit 0 {
+            description Client;
+            family inet {
+                address 10.0.0.1/30;
+            }
+        }
+    }
+}
+routing-options {
+    static {
+        route 113.13.0.0/16 next-hop 10.0.0.2;
+    }
+}
+firewall {
+    filter INCOMING {
+        term http-traffic {
+            from {
+                destination-address {
+					113.13.132.118/32;
+                    113.13.132.125/32;
+                    113.13.132.126/32;
+                    113.13.132.49/32;
+                    113.13.132.56/32;
+                    113.13.132.57/32;
+                    113.13.132.66/32;
+                    113.13.132.70/32;
+                    113.13.132.71/32;
+                    113.13.132.72/32;
+                    113.13.132.91/32;
+                    113.13.133.130/32;
+                    113.13.133.155/32;
+                    113.13.133.161/32;
+                    113.13.223.118/32;
+                    113.13.223.94/32;
+                }
+                protocol tcp;
+                destination-port 80;
+            }
+			then accept;
+        }
+        term https-traffic {
+            from {
+                destination-address {
+                    113.13.132.103/32;
+					113.13.132.118/32;
+                    113.13.132.125/32;
+                    113.13.132.126/32;
+                    113.13.132.134/32;
+                    113.13.132.135/32;
+                    113.13.132.223/32;
+                    113.13.132.224/32;
+                    113.13.132.225/32;
+                    113.13.132.23/32;
+                    113.13.132.47/32;
+                    113.13.132.49/32;
+                    113.13.132.57/32;
+                    113.13.132.70/32;
+                    113.13.132.71/32;
+                    113.13.132.72/32;
+                    113.13.132.91/32;
+                    113.13.132.96/32;
+                    113.13.133.130/32;
+                    113.13.133.153/32;
+                    113.13.133.155/32;
+                    113.13.133.62/32;
+                    113.13.223.118/32;
+                    113.13.223.94/32;
+                }
+                protocol tcp;
+                destination-port 443;
+            }
+			then accept;
+        }
+        term smtp-traffic {
+            from {
+                destination-address {
+                    113.13.132.134/32;
+                    113.13.132.135/32;
+                    113.13.132.223/32;
+                    113.13.132.224/32;
+                    113.13.132.225/32;
+                }
+                protocol tcp;
+                destination-port 25;
+            }
+			then accept;
+        }
+		term dns-traffic {
+            from {
+                destination-address {
+                    113.13.132.35/32;
+                    113.13.132.37/32;
+                    113.13.133.252/32;
+                    113.13.133.68/32;
+                    113.13.133.69/32;
+                }
+                protocol [ tcp udp ];
+                destination-port 53;
+            }
+			then accept;
+        }
+		term ftp-traffic {
+            from {
+                destination-address {
+                    113.13.132.66/32;
+                }
+                protocol tcp;
+                destination-port [ 20 21 ];
+            }
+			then accept;
+        }
+		term ldap-traffic {
+            from {
+                destination-address {
+                    113.13.133.130/32;
+					113.13.133.161/32;
+                }
+                protocol tcp;
+                destination-port 389;
+            }
+			then accept;
+        }
+		term 40-port-traffic {
+            from {
+                destination-address {
+                    113.13.132.73/32;
+                    113.13.132.74/32;
+					113.13.132.75/32;
+					113.13.132.76/32;
+					113.13.132.78/32;
+					113.13.132.79/32;
+					113.13.132.81/32;
+                }
+                protocol tcp;
+				source-port [ 40111 40110 42111 42110 43111 43110 44111 44110 45111 45110 38111 38110 ]
+                destination-port [ 40111 42111 43111 44111 45111 ];
+            }
+			then accept;
+        }
+		term 11100-port-traffic {
+            from {
+                destination-address {
+                    113.13.132.201/32;
+                }
+                protocol udp;
+                destination-port 11100-11131;
+            }
+			then accept;
+        }
+		term 30112-port-traffic {
+            from {
+                destination-address {
+                    113.13.133.130/32;
+					113.13.133.163/32;
+                }
+                protocol tcp;
+                destination-port [ 30112 40102 50112 ];
+            }
+			then accept;
+        }
+		term 3788-port-traffic {
+            from {
+                destination-address {
+					113.13.223.164/32;
+					113.13.223.3/32;
+					113.13.223.36/32;
+					113.13.223.44/32;
+					113.13.223.52/32;
+                }
+                protocol tcp;
+				source-port 11100-11131;
+                destination-port [ 3788 4444 5111-5117 ];
+            }
+			then accept;
+        }
+		term 33777-port-traffic {
+            from {
+                destination-address {
+					113.13.223.37/32;
+					113.13.223.54/32;
+                }
+                protocol udp;
+                destination-port 33777;
+            }
+			then accept;
+        }
+		term esp-icmp-traffic {
+            from {
+                destination-address {
+					113.13.223.105/32;
+					113.13.223.116/32;
+					113.13.223.117/32;
+                }
+                protocol [ esp icmp ];
+                destination-port [ 1500 3500 ];
+            }
+			then accept;
+        }
+		term 113.13.223.105-host-gre-ah-traffic {
+            from {
+                destination-address {
+					113.13.223.105/32;
+                }
+                protocol [ gre ah ];
+            }
+			then accept;
+        }
+		term 113.13.223.106-host-gre {
+            from {
+                destination-address {
+					113.13.223.106/32;
+                }
+                protocol gre;
+            }
+			then accept;
+        }
+		term 113.13.223.141-host-esp {
+            from {
+                destination-address {
+					113.13.223.141/32;
+                }
+                protocol esp;
+				destination-port [ 1500 3500 ];
+            }
+			then accept;
+        }
+		term 113.13.223.84-host-icmp-esp-traffic {
+            from {
+                destination-address {
+					113.13.223.84/32;
+                }
+                protocol [ icmp esp ];
+            }
+			then accept;
+        }
+        term 113.13.223.84-host-tcp-traffic {
+            from {
+                destination-address {
+					113.13.223.84/32;
+                }
+                protocol tcp;
+				destination-port [ 263 265 9996 981 22 ];
+            }
+			then accept;
+        }
+		term 113.13.223.84-host-udp-traffic {
+            from {
+                destination-address {
+					113.13.223.84/32;
+                }
+                protocol udp;
+				destination-port [ 4500 500 259 2746 ];
+            }
+			then accept;
+        }	
+	}	
+}
+routing-instances {
+    Management {
+        instance-type virtual-router;
+        interface ge-0/0/0.0;
+        routing-options {
+            static {
+                route 0.0.0.0/0 next-hop 10.253.0.1;
+            }
+        }
+    }
+}
